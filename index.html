@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shobhon AI - Voice Agent Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        
+        // Lucide Icon Wrapper Component
+        const Icon = ({ name, size = 20, color = "currentColor", strokeWidth = 2, className = "" }) => {
+            const iconRef = useRef(null);
+            useEffect(() => {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }, [name]);
+            return <i data-lucide={name} className={className} style={{ width: size, height: size }}></i>;
+        };
+
+        const AnonditoBortomanBanner = () => (
+            <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-[1px] rounded-2xl mb-8 shadow-lg shadow-indigo-500/10">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-1 tracking-tight">আনন্দিত বর্তমান (Anondito Bortoman)</h2>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm">
+                            আপনার ব্যবসার ফোন কল সামলাবে AI, আপনি উপভোগ করুন আপনার বর্তমান মুহূর্তকে। জীবনের প্রতিটি ক্ষণ হোক আনন্দময়।
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full font-semibold text-xs uppercase tracking-wider">
+                        <Icon name="sun" size={14} />
+                        Live in the Moment
+                    </div>
+                </div>
+            </div>
+        );
+
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('dashboard');
+            const [isDarkMode, setIsDarkMode] = useState(false);
+            const [isAgentActive, setIsAgentActive] = useState(true);
+            const [showNotification, setShowNotification] = useState(false);
+            const [isSimulating, setIsSimulating] = useState(false);
+            const [isAiTyping, setIsAiTyping] = useState(false);
+            const [simMessages, setSimMessages] = useState([
+                { role: 'ai', text: 'হ্যালো! শোভন AI থেকে বলছি। আমি আপনাকে কিভাবে সাহায্য করতে পারি?' }
+            ]);
+            
+            const scrollRef = useRef(null);
+
+            useEffect(() => {
+                if (scrollRef.current) {
+                    scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+                }
+                if (window.lucide) window.lucide.createIcons();
+            }, [simMessages, isAiTyping, activeTab]);
+
+            const handleSave = () => {
+                setShowNotification(true);
+                setTimeout(() => setShowNotification(false), 3000);
+            };
+
+            const startSimulation = () => {
+                if (isSimulating) return;
+                setIsSimulating(true);
+                setSimMessages([{ role: 'ai', text: 'হ্যালো! শোভন AI থেকে বলছি। আমি আপনাকে কিভাবে সাহায্য করতে পারি?' }]);
+
+                const scenario = [
+                    { delay: 1500, role: 'user', text: 'আমি কালকের জন্য একটা অ্যাপয়েন্টমেন্ট চাই।' },
+                    { delay: 1000, typing: true },
+                    { delay: 2000, role: 'ai', text: 'অবশ্যই! কাল আমাদের সকাল ১০টা এবং বিকাল ৪টায় স্লট খালি আছে। আপনার কোনটি পছন্দ?' },
+                    { delay: 1500, role: 'user', text: 'সকাল ১০টাই ভালো হবে।' },
+                    { delay: 800, typing: true },
+                    { delay: 1800, role: 'ai', text: 'ঠিক আছে। আপনার নাম এবং ফোন নম্বরটি কি বলা যাবে?' },
+                    { delay: 1200, role: 'user', text: 'আমি আরিক, ০১৭XXXXXXXX' },
+                    { delay: 1000, typing: true },
+                    { delay: 2000, role: 'ai', text: 'ধন্যবাদ আরিক সাহেব! আপনার বুকিং কনফার্ম করা হয়েছে। কনফার্মেশন মেসেজ আপনার ফোনে চলে যাবে।' }
+                ];
+
+                let currentTime = 0;
+                scenario.forEach((step) => {
+                    currentTime += step.delay;
+                    setTimeout(() => {
+                        if (step.typing) {
+                            setIsAiTyping(true);
+                        } else {
+                            setIsAiTyping(false);
+                            setSimMessages(prev => [...prev, { role: step.role, text: step.text }]);
+                            if (step.text.includes('কনফার্ম করা হয়েছে')) setIsSimulating(false);
+                        }
+                    }, currentTime);
+                });
+            };
+
+            const DashboardView = () => (
+                <div className="animate-in fade-in duration-500">
+                    <AnonditoBortomanBanner />
+                    <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        {[
+                            { title: 'Total Calls', value: '1,284', change: '+12%', icon: 'phone', color: 'text-blue-500', bg: 'bg-blue-50' },
+                            { title: 'Bookings', value: '452', change: '+18%', icon: 'calendar', color: 'text-green-500', bg: 'bg-green-50' },
+                            { title: 'Revenue Saved', value: '৳ 85,200', change: '+5%', icon: 'bar-chart-3', color: 'text-purple-500', bg: 'bg-purple-50' },
+                            { title: 'Avg. Duration', value: '1m 24s', change: '-2%', icon: 'clock', color: 'text-orange-500', bg: 'bg-orange-50' },
+                        ].map((stat, i) => (
+                            <div key={i} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-transform hover:scale-[1.02]">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className={`p-3 rounded-xl ${stat.bg} ${stat.color}`}>
+                                        <Icon name={stat.icon} size={22} />
+                                    </div>
+                                    <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-green-100 text-green-600">{stat.change}</span>
+                                </div>
+                                <h3 className="text-slate-500 text-xs font-semibold uppercase">{stat.title}</h3>
+                                <p className="text-2xl font-bold mt-1">{stat.value}</p>
+                            </div>
+                        ))}
+                    </section>
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+                            <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+                                <h3 className="font-bold text-lg">সাম্প্রতিক বুকিং</h3>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-slate-50 text-slate-500 text-[10px] font-bold uppercase tracking-widest">
+                                        <tr>
+                                            <th className="px-6 py-4">কাস্টমার</th>
+                                            <th className="px-6 py-4">সার্ভিস</th>
+                                            <th className="px-6 py-4 text-center">স্ট্যাটাস</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {['Ariful Islam', 'Dr. Nusrat Jahan', 'Sabbir Ahmed'].map((name, i) => (
+                                            <tr key={i} className="hover:bg-slate-50 transition-colors text-sm">
+                                                <td className="px-6 py-4 font-semibold">{name}</td>
+                                                <td className="px-6 py-4 text-slate-500">Service {i+1}</td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold">Confirmed</span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col shadow-sm overflow-hidden">
+                            <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+                                <h3 className="font-bold text-lg">লাইভ সিমুলেশন</h3>
+                                <span className={`w-2 h-2 rounded-full bg-red-500 ${isSimulating ? 'animate-ping' : ''}`}></span>
+                            </div>
+                            <div ref={scrollRef} className="flex-1 p-6 space-y-4 h-[300px] overflow-y-auto bg-slate-50 scrollbar-hide">
+                                {simMessages.map((msg, i) => (
+                                    <div key={i} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : ''}`}>
+                                        {msg.role === 'ai' && <div className="w-7 h-7 bg-indigo-600 rounded-full flex items-center justify-center text-white"><Icon name="mic" size={12} /></div>}
+                                        <div className={`max-w-[85%] p-3 rounded-2xl text-xs ${msg.role === 'ai' ? 'bg-white rounded-tl-none border shadow-sm' : 'bg-indigo-600 text-white rounded-tr-none'}`}>{msg.text}</div>
+                                    </div>
+                                ))}
+                                {isAiTyping && <div className="flex gap-1 p-2 bg-white rounded-lg w-12"><div className="w-1 h-1 bg-slate-400 rounded-full animate-bounce"></div><div className="w-1 h-1 bg-slate-400 rounded-full animate-bounce delay-100"></div><div className="w-1 h-1 bg-slate-400 rounded-full animate-bounce delay-200"></div></div>}
+                            </div>
+                            <div className="p-4 bg-slate-50 border-t">
+                                <button onClick={startSimulation} disabled={isSimulating} className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all ${isSimulating ? 'bg-slate-300' : 'bg-indigo-600 text-white'}`}>
+                                    <Icon name={isSimulating ? 'refresh-cw' : 'play'} size={16} className={isSimulating ? 'animate-spin' : ''} />
+                                    {isSimulating ? 'সিমুলেশন চলছে...' : 'টেস্ট কল শুরু করুন'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const AgentView = () => (
+                <div className="animate-in fade-in duration-500">
+                    <h2 className="text-xl font-bold mb-6">এজেন্ট কনফিগারেশন</h2>
+                    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <label className="block text-xs font-bold text-slate-400 uppercase mb-4">Core System Prompt</label>
+                        <textarea className="w-full h-48 p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm" defaultValue={`তুমি একজন দক্ষ বাংলা ভয়েস অ্যাসিস্ট্যান্ট...`} />
+                        <div className="flex justify-end mt-4">
+                            <button onClick={handleSave} className="bg-indigo-600 text-white px-8 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg"><Icon name="save" size={18} />সেভ করুন</button>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            return (
+                <div className={`${isDarkMode ? 'dark' : ''} min-h-screen bg-slate-50 text-slate-900`}>
+                    <div className="flex min-h-screen">
+                        <aside className="w-64 border-r bg-white hidden lg:flex flex-col sticky top-0 h-screen">
+                            <div className="p-6 flex items-center gap-3">
+                                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white"><Icon name="mic" size={22} /></div>
+                                <h1 className="text-xl font-black text-indigo-600 tracking-tight">Shobhon AI</h1>
+                            </div>
+                            <nav className="flex-1 px-4 py-6 space-y-2">
+                                {[
+                                    { id: 'dashboard', label: 'Dashboard', icon: 'layout-dashboard' },
+                                    { id: 'agent', label: 'Agent Settings', icon: 'mic' },
+                                ].map((link) => (
+                                    <button key={link.id} onClick={() => setActiveTab(link.id)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm ${activeTab === link.id ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}>
+                                        <Icon name={link.icon} size={18} />{link.label}
+                                    </button>
+                                ))}
+                            </nav>
+                        </aside>
+                        
+                        <main className="flex-1 p-6 md:p-10 relative">
+                            {showNotification && (
+                                <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[100] bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-2 font-bold text-sm animate-bounce">
+                                    <Icon name="check-circle-2" size={18} className="text-green-400" />সবকিছু সেভ করা হয়েছে!
+                                </div>
+                            )}
+                            <header className="flex justify-between items-center mb-10">
+                                <div><h2 className="text-3xl font-black tracking-tighter">স্বাগতম, আরিক!</h2></div>
+                                <button onClick={() => setIsAgentActive(!isAgentActive)} className={`px-6 py-2 rounded-full font-bold text-sm border flex items-center gap-2 transition-all ${isAgentActive ? 'bg-green-50 text-green-700 border-green-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+                                    <div className={`w-2.5 h-2.5 rounded-full ${isAgentActive ? 'bg-green-500 animate-pulse' : 'bg-slate-400'}`}></div>
+                                    {isAgentActive ? 'Agent Active' : 'Agent Paused'}
+                                </button>
+                            </header>
+                            {activeTab === 'dashboard' ? <DashboardView /> : <AgentView />}
+                        </main>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
+
